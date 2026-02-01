@@ -1,0 +1,171 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { readdir, readFile } from 'fs/promises';
+import { join } from 'path';
+
+export async function getStaticPaths() {
+  const eventsDir = join(process.cwd(), 'src/content/events');
+  const eventFiles = await readdir(eventsDir);
+
+  return eventFiles
+    .filter(file => file.endsWith('.md'))
+    .map(file => ({
+      params: { slug: file.replace('.md', '') }
+    }));
+}
+
+const { slug } = Astro.params;
+const eventsDir = join(process.cwd(), 'src/content/events');
+const content = await readFile(join(eventsDir, `${slug}.md`), 'utf-8');
+
+// Extract frontmatter
+const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+const frontmatter: any = {};
+
+if (frontmatterMatch) {
+  const frontmatterText = frontmatterMatch[1];
+  frontmatterText.split('\n').forEach(line => {
+    const [key, ...valueParts] = line.split(':');
+    if (key && valueParts.length) {
+      frontmatter[key.trim()] = valueParts.join(':').trim().replace(/['"]/g, '');
+    }
+  });
+}
+
+// Markdown → HTML
+const markdownContent = content.replace(/^---\n[\s\S]*?\n---\n/, '');
+
+let htmlContent = markdownContent
+  .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+  .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+  .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+  .replace(/\*(.*?)\*/g, '<em>$1</em>')
+  .replace(/^- (.*$)/gim, '<li>$1</li>')
+  .replace(/\n\n/g, '</p><p>')
+  .replace(/^(?!<[hl]|<li)/gim, '<p>')
+  .replace(/$(?!<\/[hl]|<\/li>)/gim, '</p>');
+
+htmlContent = htmlContent.replace(/(<li>.*<\/li>)/gis, '<ul>$1</ul>');
+---
+
+<Layout title={frontmatter.title}>
+  <article class="event-detail">
+
+    <a href="/events" class="back-link">
+      ← Return to Events Grid
+    </a>
+
+    <header class="event-header">
+      <h1>{frontmatter.title}</h1>
+
+      <div class="event-meta">
+        <span>📅 {new Date(frontmatter.date).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })}</span>
+        <span>🕒 {frontmatter.time}</span>
+        <span>📍 {frontmatter.location}</span>
+      </div>
+    </header>
+
+    <section class="event-content" set:html={htmlContent} />
+  </article>
+</Layout>
+
+<style>
+/* ---------- CONTAINER ---------- */
+.event-detail {
+  max-width: 900px;
+  margin: auto;
+  background: rgba(15, 18, 35, 0.85);
+  border-radius: 24px;
+  padding: 3rem;
+  border: 1px solid rgba(127,124,255,0.35);
+  backdrop-filter: blur(18px);
+  box-shadow:
+    inset 0 0 30px rgba(127,124,255,0.1),
+    0 30px 60px rgba(0,0,0,0.5);
+}
+
+/* ---------- BACK LINK ---------- */
+.back-link {
+  display: inline-block;
+  margin-bottom: 2.5rem;
+  color: #00ffe0;
+  font-weight: 600;
+  text-decoration: none;
+  letter-spacing: 0.08em;
+}
+
+.back-link:hover {
+  text-shadow: 0 0 12px rgba(0,255,224,0.9);
+}
+
+/* ---------- HEADER ---------- */
+.event-header {
+  margin-bottom: 3rem;
+}
+
+.event-header h1 {
+  font-size: clamp(2.5rem, 5vw, 3.4rem);
+  letter-spacing: 0.1em;
+  margin-bottom: 1.2rem;
+  background: linear-gradient(135deg, #7f7cff, #00ffe0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow:
+    0 0 25px rgba(127,124,255,0.6),
+    0 0 50px rgba(0,255,224,0.35);
+}
+
+/* ---------- META ---------- */
+.event-meta {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  font-size: 1rem;
+  color: #9aa2ff;
+}
+
+/* ---------- CONTENT ---------- */
+.event-content {
+  line-height: 1.9;
+  color: #e6e9ff;
+}
+
+/* Markdown styling */
+.event-content :global(h1),
+.event-content :global(h2),
+.event-content :global(h3) {
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  color: #00ffe0;
+}
+
+.event-content :global(h1) { font-size: 2rem; }
+.event-content :global(h2) { font-size: 1.6rem; }
+.event-content :global(h3) { font-size: 1.3rem; }
+
+.event-content :global(p) {
+  margin-bottom: 1.2rem;
+  color: #9aa2ff;
+}
+
+.event-content :global(ul) {
+  margin: 1.2rem 0 1.2rem 2rem;
+}
+
+.event-content :global(li) {
+  margin: 0.6rem 0;
+}
+
+.event-content :global(strong) {
+  color: #e6e9ff;
+}
+
+.event-content :global(em) {
+  color: #7f7cff;
+}
+</style>

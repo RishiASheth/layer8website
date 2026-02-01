@@ -1,0 +1,225 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { readdir, readFile } from "fs/promises";
+import { join } from "path";
+
+// Read all blog markdown files
+const blogDir = join(process.cwd(), "src/content/blog");
+let blogFiles = [];
+try {
+  blogFiles = await readdir(blogDir);
+} catch (e) {
+  blogFiles = [];
+}
+
+const posts = await Promise.all(
+  blogFiles
+    .filter((file) => file.endsWith(".md"))
+    .map(async (file) => {
+      const content = await readFile(join(blogDir, file), "utf-8");
+
+      const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+      const frontmatter: any = {};
+
+      if (frontmatterMatch) {
+        const frontmatterText = frontmatterMatch[1];
+        frontmatterText.split("\n").forEach((line) => {
+          const [key, ...valueParts] = line.split(":");
+          if (key && valueParts.length) {
+            frontmatter[key.trim()] = valueParts
+              .join(":")
+              .trim()
+              .replace(/['"]/g, "");
+          }
+        });
+      }
+
+      const bodyContent = content.replace(/^---\n[\s\S]*?\n---\n/, "");
+      const excerpt =
+        bodyContent.split("\n\n")[1] || bodyContent.substring(0, 160);
+
+      return {
+        slug: file.replace(".md", ""),
+        excerpt,
+        ...frontmatter,
+      };
+    }),
+);
+
+// Sort newest first
+posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+---
+
+<Layout title="Blog">
+  <header class="page-header">
+    <h1>&lt; Blog_Logs /&gt;</h1>
+    <p>Articles • Tutorials • Write-Ups</p>
+  </header>
+
+  {
+    posts.length > 0 && (
+      <section class="blog-grid">
+        {posts.map((post) => (
+          <article class="blog-card">
+            <h2>{post.title}</h2>
+
+            <div class="post-meta">
+              <span>✍ {post.author}</span>
+              <span>•</span>
+              <span>
+                {new Date(post.date).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </span>
+            </div>
+
+            <p class="excerpt">
+              {post.excerpt.replace(/#/g, "").substring(0, 160)}…
+            </p>
+
+            <a href={`/blog/${post.slug}`} class="read-more">
+              Read Log →
+            </a>
+          </article>
+        ))}
+      </section>
+    )
+  }
+
+  {
+    posts.length === 0 && (
+      <p class="no-posts">No logs detected. Awaiting first transmission…</p>
+    )
+  }
+</Layout>
+
+<style>
+  /* ---------- HEADER ---------- */
+  .page-header {
+    text-align: center;
+    margin-bottom: 4rem;
+  }
+
+  .page-header h1 {
+    font-size: clamp(2.4rem, 5vw, 3.2rem);
+    letter-spacing: 0.15em;
+    margin-bottom: 0.8rem;
+    background: linear-gradient(135deg, #7f7cff, #00ffe0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow:
+      0 0 20px rgba(127, 124, 255, 0.6),
+      0 0 40px rgba(0, 255, 224, 0.3);
+  }
+
+  .page-header p {
+    color: #9aa2ff;
+    font-size: 1.1rem;
+  }
+
+  /* ---------- GRID ---------- */
+  .blog-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 2.2rem;
+  }
+
+  /* ---------- CARD ---------- */
+  .blog-card {
+    background: rgba(15, 18, 35, 0.85);
+    border-radius: 22px;
+    padding: 2.4rem 2.2rem;
+    border: 1px solid rgba(127, 124, 255, 0.35);
+    backdrop-filter: blur(16px);
+    box-shadow:
+      inset 0 0 20px rgba(127, 124, 255, 0.1),
+      0 20px 40px rgba(0, 0, 0, 0.45);
+    transition: all 0.35s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .blog-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      120deg,
+      transparent,
+      rgba(0, 255, 224, 0.15),
+      transparent
+    );
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+  }
+
+  .blog-card:hover::before {
+    opacity: 1;
+  }
+
+  .blog-card:hover {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow:
+      0 0 40px rgba(127, 124, 255, 0.45),
+      0 0 80px rgba(0, 255, 224, 0.25);
+  }
+
+  /* ---------- CONTENT ---------- */
+  .blog-card h2 {
+    font-size: 1.5rem;
+    color: #e6e9ff;
+    margin-bottom: 0.6rem;
+  }
+
+  .post-meta {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    color: #9aa2ff;
+    font-size: 0.9rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .excerpt {
+    color: #9aa2ff;
+    line-height: 1.6;
+    margin-bottom: 1.6rem;
+  }
+
+  /* ---------- LINK ---------- */
+  .read-more {
+    color: #00ffe0;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-decoration: none;
+    position: relative;
+  }
+
+  .read-more::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -6px;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #7f7cff, #00ffe0);
+    transition: width 0.3s ease;
+    box-shadow: 0 0 10px rgba(0, 255, 224, 0.8);
+  }
+
+  .read-more:hover::after {
+    width: 100%;
+  }
+
+  /* ---------- EMPTY ---------- */
+  .no-posts {
+    text-align: center;
+    color: #9aa2ff;
+    font-size: 1.2rem;
+    margin-top: 4rem;
+    font-style: italic;
+  }
+</style>

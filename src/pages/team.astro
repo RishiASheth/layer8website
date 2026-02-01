@@ -1,0 +1,232 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { readdir, readFile } from "fs/promises";
+import { join } from "path";
+
+// Read all team member markdown files
+const teamDir = join(process.cwd(), "src/content/team");
+const teamFiles = await readdir(teamDir);
+
+const members = await Promise.all(
+  teamFiles
+    .filter((file) => file.endsWith(".md"))
+    .map(async (file) => {
+      const content = await readFile(join(teamDir, file), "utf-8");
+
+      const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+      const frontmatter: any = {};
+
+      if (frontmatterMatch) {
+        const frontmatterText = frontmatterMatch[1];
+        frontmatterText.split("\n").forEach((line) => {
+          const [key, ...valueParts] = line.split(":");
+          if (key && valueParts.length) {
+            frontmatter[key.trim()] = valueParts
+              .join(":")
+              .trim()
+              .replace(/['"]/g, "");
+          }
+        });
+      }
+
+      const bio = content.replace(/^---\n[\s\S]*?\n---\n/, "").trim();
+
+      return { ...frontmatter, bio };
+    }),
+);
+---
+
+<Layout title="Team">
+  <header class="page-header">
+    <h1>&lt; Team_Grid /&gt;</h1>
+    <p>The minds behind Layer8</p>
+  </header>
+
+  <section class="team-grid">
+    {
+      members.map((member) => (
+        <article class="member-card">
+          <div class="member-avatar">
+            <img src={member.photo} alt={member.name} loading="lazy" />
+          </div>
+
+          <h2>{member.name}</h2>
+          <p class="role">{member.role}</p>
+          <p class="details">
+            {member.year} • {member.major}
+          </p>
+
+          <p class="bio">{member.bio}</p>
+
+          <div class="social-links">
+            {member.email && (
+              <a href={`mailto:${member.email}`} title="Email">
+                📧
+              </a>
+            )}
+            {member.github && (
+              <a
+                href={`https://github.com/${member.github}`}
+                target="_blank"
+                title="GitHub"
+              >
+                💻
+              </a>
+            )}
+            {member.linkedin && (
+              <a
+                href={`https://linkedin.com/in/${member.linkedin}`}
+                target="_blank"
+                title="LinkedIn"
+              >
+                💼
+              </a>
+            )}
+          </div>
+        </article>
+      ))
+    }
+  </section>
+</Layout>
+
+<style>
+  /* ---------- HEADER ---------- */
+  .page-header {
+    text-align: center;
+    margin-bottom: 4rem;
+  }
+
+  .page-header h1 {
+    font-size: clamp(2.4rem, 5vw, 3.2rem);
+    letter-spacing: 0.15em;
+    margin-bottom: 0.8rem;
+    background: linear-gradient(135deg, #7f7cff, #00ffe0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow:
+      0 0 20px rgba(127, 124, 255, 0.6),
+      0 0 40px rgba(0, 255, 224, 0.3);
+  }
+
+  .page-header p {
+    color: #9aa2ff;
+    font-size: 1.1rem;
+  }
+
+  /* ---------- GRID ---------- */
+  .team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2.2rem;
+  }
+
+  /* ---------- CARD ---------- */
+  .member-card {
+    background: rgba(15, 18, 35, 0.85);
+    border-radius: 22px;
+    padding: 2.4rem 2rem;
+    text-align: center;
+    border: 1px solid rgba(127, 124, 255, 0.35);
+    backdrop-filter: blur(16px);
+    box-shadow:
+      inset 0 0 20px rgba(127, 124, 255, 0.1),
+      0 20px 40px rgba(0, 0, 0, 0.45);
+    transition: all 0.35s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .member-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      120deg,
+      transparent,
+      rgba(0, 255, 224, 0.15),
+      transparent
+    );
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none; /* ✅ FIX */
+  }
+
+  .member-card:hover::before {
+    opacity: 1;
+  }
+
+  .member-card:hover {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow:
+      0 0 40px rgba(127, 124, 255, 0.45),
+      0 0 80px rgba(0, 255, 224, 0.25);
+  }
+
+  /* ---------- AVATAR ---------- */
+  .member-avatar {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    margin: 0 auto 1.4rem;
+    overflow: hidden;
+    background: linear-gradient(135deg, #7f7cff, #00ffe0);
+    padding: 3px;
+    box-shadow:
+      0 0 25px rgba(0, 255, 224, 0.8),
+      inset 0 0 15px rgba(255, 255, 255, 0.3);
+  }
+
+  .member-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
+  }
+
+  /* ---------- TEXT ---------- */
+  .member-card h2 {
+    font-size: 1.4rem;
+    color: #e6e9ff;
+    margin-bottom: 0.4rem;
+  }
+
+  .role {
+    color: #00ffe0;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+  }
+
+  .details {
+    color: #9aa2ff;
+    font-size: 0.9rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .bio {
+    color: #9aa2ff;
+    line-height: 1.6;
+    font-size: 0.95rem;
+    margin-bottom: 1.6rem;
+  }
+
+  /* ---------- SOCIAL ---------- */
+  .social-links {
+    display: flex;
+    justify-content: center;
+    gap: 1.2rem;
+  }
+
+  .social-links a {
+    font-size: 1.4rem;
+    text-decoration: none;
+    transition:
+      transform 0.25s,
+      text-shadow 0.25s;
+  }
+
+  .social-links a:hover {
+    transform: scale(1.3);
+    text-shadow: 0 0 12px rgba(0, 255, 224, 0.9);
+  }
+</style>

@@ -1,0 +1,208 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Tech Club | Cyber Future">
+  <section class="hero">
+    <div class="grid-overlay"></div>
+
+    <div class="hero-content">
+      <h1>
+        <span class="glow">&lt; Layer_8 /&gt;</span>
+      </h1>
+      <p>Lorem ipsum dolor sit amet consectetur adipiscing elit.</p>
+
+      <a href="/events" class="cta"> Enter the Grid → </a>
+    </div>
+  </section>
+
+  <section class="about">
+    <h2>&lt; About_Us /&gt;</h2>
+    <p>
+      Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus
+      ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus
+      duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar
+      vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl
+      malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class
+      aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos
+      himenaeos.
+    </p>
+  </section>
+
+  <section class="quick-links">
+    <div class="card">
+      <h3>⚡ Events</h3>
+      <p>Hackathons, cyber labs, workshops, and live builds.</p>
+      <a href="/events">Access →</a>
+    </div>
+
+    <div class="card">
+      <h3>🧠 Team</h3>
+      <p>The minds shaping our digital frontier.</p>
+      <a href="/team">Meet →</a>
+    </div>
+
+    <div class="card">
+      <h3>📡 Blog</h3>
+      <p>Logs, write-ups, and tech deep dives.</p>
+      <a href="/blog">Read →</a>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  /* ---------- THEME ---------- */
+  :root {
+    --bg: #05060f;
+    --panel: rgba(15, 18, 35, 0.75);
+    --text: #e6e9ff;
+    --muted: #8b93ff;
+    --neon1: #7f7cff;
+    --neon2: #00ffe0;
+    --border: rgba(127, 124, 255, 0.3);
+  }
+
+  body {
+    background: var(--bg);
+  }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    position: relative;
+    padding: 7rem 1.5rem;
+    border-radius: 24px;
+    background:
+      radial-gradient(circle at top, #1a1f4b, transparent 60%),
+      linear-gradient(135deg, #07091d, #05060f);
+    overflow: hidden;
+  }
+
+  .grid-overlay {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(127, 124, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(127, 124, 255, 0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  .hero-content {
+    position: relative;
+    max-width: 900px;
+    margin: auto;
+    text-align: center;
+  }
+
+  .hero h1 {
+    font-size: clamp(3rem, 6vw, 4.5rem);
+    letter-spacing: 0.15em;
+    margin-bottom: 1rem;
+  }
+
+  .glow {
+    background: linear-gradient(135deg, var(--neon1), var(--neon2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow:
+      0 0 15px rgba(127, 124, 255, 0.6),
+      0 0 40px rgba(0, 255, 224, 0.3);
+  }
+
+  .hero p {
+    font-size: 1.2rem;
+    color: var(--muted);
+    margin-bottom: 3rem;
+  }
+
+  /* CTA */
+  .cta {
+    display: inline-block;
+    padding: 1rem 2.5rem;
+    border-radius: 999px;
+    color: var(--text);
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid var(--border);
+    background: linear-gradient(
+      135deg,
+      rgba(127, 124, 255, 0.2),
+      rgba(0, 255, 224, 0.2)
+    );
+    backdrop-filter: blur(12px);
+    box-shadow: 0 0 25px rgba(127, 124, 255, 0.4);
+    transition: all 0.3s ease;
+  }
+
+  .cta:hover {
+    transform: translateY(-4px);
+    box-shadow:
+      0 0 35px rgba(0, 255, 224, 0.6),
+      0 0 60px rgba(127, 124, 255, 0.6);
+  }
+
+  /* ---------- ABOUT ---------- */
+  .about {
+    max-width: 800px;
+    margin: 5rem auto;
+    text-align: center;
+  }
+
+  .about h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: var(--neon2);
+  }
+
+  .about p {
+    color: var(--muted);
+    line-height: 1.9;
+  }
+
+  /* ---------- CARDS ---------- */
+  .quick-links {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 2rem;
+  }
+
+  .card {
+    background: var(--panel);
+    border-radius: 20px;
+    padding: 2.2rem;
+    border: 1px solid var(--border);
+    backdrop-filter: blur(16px);
+    box-shadow:
+      inset 0 0 20px rgba(127, 124, 255, 0.1),
+      0 20px 40px rgba(0, 0, 0, 0.4);
+    transition: all 0.35s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow:
+      0 0 40px rgba(127, 124, 255, 0.4),
+      0 0 80px rgba(0, 255, 224, 0.2);
+  }
+
+  .card h3 {
+    font-size: 1.4rem;
+    margin-bottom: 0.8rem;
+    color: var(--text);
+  }
+
+  .card p {
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+  }
+
+  .card a {
+    color: var(--neon2);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .card a:hover {
+    text-shadow: 0 0 10px rgba(0, 255, 224, 0.8);
+  }
+</style>
